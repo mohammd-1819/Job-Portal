@@ -41,7 +41,7 @@ class SignUpView(APIView):
     serializer_class = SignUpSerializer
 
     @extend_schema(
-        tags=['authentication'],
+        tags=['account'],
         responses={200: SignUpSerializer},
         auth=[]
     )
