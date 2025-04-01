@@ -19,6 +19,7 @@ urlpatterns = [
 
     # app endpoints
     path('api/v1/account/', include('account.urls')),
+    path('api/v1/portal/', include('portal.urls')),
 
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
