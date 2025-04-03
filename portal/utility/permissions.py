@@ -7,3 +7,6 @@ class IsReadOnlyUser(BasePermission):
         return request.method in SAFE_METHODS
 
 
+class IsJobOwner(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and getattr(request.user, 'is_job_owner', False)
