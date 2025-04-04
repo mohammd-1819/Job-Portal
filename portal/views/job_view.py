@@ -1,14 +1,12 @@
-from django.shortcuts import get_object_or_404
-from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView, CreateAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView
 from portal.models.skill_model import Skill
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
 from portal.serializers.skill_serializer import SkillSerializer
-from portal.models.job_owner_model import JobOwner
 from ..utility.pagination import Pagination
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
+from rest_framework.permissions import IsAdminUser, AllowAny
 
 
 @extend_schema(
