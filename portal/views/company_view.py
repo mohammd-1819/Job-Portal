@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView, CreateAPIView
+from rest_framework.generics import ListAPIView
 from portal.models.company_model import Company
 from rest_framework import status
 from rest_framework.response import Response
@@ -9,7 +9,7 @@ from portal.serializers.company_serializer import CompanySerializer
 from portal.models.job_owner_model import JobOwner
 from ..utility.pagination import Pagination
 from ..utility.permissions import IsJobOwner
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
+from rest_framework.permissions import AllowAny
 
 
 @extend_schema(
