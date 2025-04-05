@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import job_category_view, company_view, job_view, job_seeker_view
+from .views import job_category_view, company_view, job_view, job_seeker_view, job_application_view
 
 app_name = 'portal'
 
@@ -29,4 +29,18 @@ urlpatterns = [
     path('job/seeker/profile/remove/', job_seeker_view.RemoveJobSeekerProfileView.as_view(),
          name='job-seeker-profile-remove'),
 
+    path('job/application/company/all/', job_application_view.JobApplicationListView.as_view(),
+         name='job-application-company-list'),
+
+    path('job/application/<str:application_id>/detail', job_application_view.JobApplicationDetailView.as_view(),
+         name='job-application-detail'),
+
+    path('job/application/request/', job_application_view.CreateJobApplicationRequest.as_view(),
+         name='job-application-request'),
+
+    path('job/application/<str:application_id>/cancel', job_application_view.CancelApplicationRequest.as_view(),
+         name='job-application-cancel'),
+
+    path('job/application/<str:application_id>/status/', job_application_view.JobApplicationStatusView.as_view(),
+         name='job-application-status'),
 ]

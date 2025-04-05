@@ -35,16 +35,15 @@ class AddCompanyView(APIView):
         responses={201: CompanySerializer}
     )
     def post(self, request):
-        owner = get_object_or_404(JobOwner, user=request.user)
+        owner = get_object_or_404(JobOwner.objects.select_related('user'), user=request.user)
         serializer = self.serializer_class(data=request.data)
 
-        if serializer.is_valid():
-            serializer.save(owner=owner)
-            return Response(
-                {'message': 'Company successfully added', 'result': serializer.data},
-                status=status.HTTP_201_CREATED
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(owner=owner)
+        return Response(
+            {'message': 'Company successfully added', 'result': serializer.data},
+            status=status.HTTP_201_CREATED
+        )
 
 
 class UpdateCompanyView(APIView):
@@ -57,13 +56,14 @@ class UpdateCompanyView(APIView):
         responses={200: CompanySerializer}
     )
     def put(self, request, company_name):
-        owner = get_object_or_404(JobOwner, user=request.user)
-        company = get_object_or_404(Company, name=company_name, owner=owner)
-        serializer = CompanySerializer(instance=company, data=request.data, partial=True)
-        if serializer.is_valid():
-            return Response({'message': 'Company Successfully Updated', 'result': serializer.data},
-                            status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        owner = get_object_or_404(JobOwner.objects.select_related('user'), user=request.user)
+        company = get_object_or_404(Company.objects.select_related('owner'), name=company_name, owner=owner)
+        serializer = self.serializer_class(instance=company, data=request.data, partial=True)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({'message': 'Company Successfully Updated', 'result': serializer.data},
+                        status=status.HTTP_200_OK)
 
 
 class RemoveCompanyView(APIView):
@@ -73,7 +73,7 @@ class RemoveCompanyView(APIView):
         summary='Remove Company',
     )
     def delete(self, request, company_name):
-        owner = get_object_or_404(JobOwner, user=request.user)
-        company = get_object_or_404(Company, name=company_name, owner=owner)
+        owner = get_object_or_404(JobOwner.objects.select_related('user'), user=request.user)
+        company = get_object_or_404(Company.objects.select_related('owner'), name=company_name, owner=owner)
         company.delete()
         return Response({'message': 'Company Removed'}, status=status.HTTP_200_OK)

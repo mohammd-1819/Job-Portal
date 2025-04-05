@@ -1,12 +1,12 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView, CreateAPIView
+from rest_framework.generics import RetrieveAPIView
 from portal.models.job_seeker_profile_model import JobSeekerProfile
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
 from portal.serializers.job_seeker_profile_serializer import JobSeekerProfileSerializer
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
+from rest_framework.permissions import IsAuthenticated
 
 
 @extend_schema(
@@ -33,11 +33,12 @@ class CreateJobSeekerProfileView(APIView):
     )
     def post(self, request):
         serializer = JobSeekerProfileSerializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save(user=request.user)
-            return Response({'message': 'Job Seeker Profile Created', 'result': serializer.data},
-                            status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=request.user)
+
+        return Response({'message': 'Job Seeker Profile Created', 'result': serializer.data},
+                        status=status.HTTP_201_CREATED)
 
 
 class UpdateJobSeekerProfileView(APIView):
@@ -51,12 +52,13 @@ class UpdateJobSeekerProfileView(APIView):
 
     )
     def put(self, request):
-        profile = get_object_or_404(JobSeekerProfile, user=request.user)
+        profile = get_object_or_404(JobSeekerProfile.objects.select_related('user'), user=request.user)
         serializer = JobSeekerProfileSerializer(instance=profile, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'message': 'Profile Updated', 'result': serializer.data}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({'message': 'Profile Updated', 'result': serializer.data}, status=status.HTTP_200_OK)
 
 
 class RemoveJobSeekerProfileView(APIView):
@@ -68,6 +70,6 @@ class RemoveJobSeekerProfileView(APIView):
         summary='Remove job seeker profile'
     )
     def delete(self, request):
-        profile = get_object_or_404(JobSeekerProfile, user=request.user)
+        profile = get_object_or_404(JobSeekerProfile.objects.select_related('user'), user=request.user)
         profile.delete()
         return Response({'message': 'Profile Removed'}, status=status.HTTP_200_OK)
