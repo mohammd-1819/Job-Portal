@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.shortcuts import get_object_or_404
 from rest_framework.generics import ListAPIView
 from portal.models.company_model import Company
@@ -12,17 +13,35 @@ from ..utility.permissions import IsJobOwner
 from rest_framework.permissions import AllowAny
 
 
-@extend_schema(
-    tags=['Company'],
-    summary='List of all companies',
-    responses={200: CompanySerializer(many=True)},
-    auth=[]
-)
-class CompanyListView(ListAPIView):
+class CompanyListView(APIView):
     permission_classes = [AllowAny]
-    queryset = Company.objects.all()
     serializer_class = CompanySerializer
     pagination_class = Pagination
+
+    @extend_schema(
+        tags=['Company'],
+        summary='List of all companies',
+        responses={200: CompanySerializer(many=True)},
+        auth=[]
+    )
+    def get(self, request):
+        page = request.GET.get("page", 1)
+        cache_key = f'company_list_page_{page}'
+
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return Response(cached_data, status=status.HTTP_200_OK)
+
+        properties = Company.objects.all()
+        paginator = self.pagination_class()
+        result = paginator.paginate_queryset(properties, request, view=self)
+        serializer = self.serializer_class(result, many=True, context={'request': request})
+
+        paginated_response = paginator.get_paginated_response(serializer.data)
+
+        cache.set(cache_key, paginated_response.data, 60 * 15)
+
+        return paginated_response
 
 
 class AddCompanyView(APIView):
