@@ -1,64 +1,89 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView
-from portal.models.skill_model import Skill
+from portal.models.job_model import Job
+from portal.models.job_owner_model import JobOwner
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
-from portal.serializers.skill_serializer import SkillSerializer
-from ..utility.pagination import Pagination
+from portal.serializers.job_serializer import JobSerializer
+from portal.utility.pagination import Pagination
 from rest_framework.permissions import IsAdminUser, AllowAny
+from portal.utility.permissions import IsJobOwner
 
 
 @extend_schema(
-    tags=['Skill'],
-    summary='List of all skills',
-    responses={200: SkillSerializer(many=True)},
-    auth=[]
+    tags=['Job'],
+    summary='List of all jobs',
+    responses={200: JobSerializer}
 )
-class SkillListView(ListAPIView):
+class JobListView(ListAPIView):
     permission_classes = [AllowAny]
-    queryset = Skill.objects.all()
-    serializer_class = SkillSerializer
+    queryset = Job.objects.all()
+    serializer_class = JobSerializer
     pagination_class = Pagination
 
 
 @extend_schema(
-    tags=['Skill'],
-    summary='Detail of a skills',
-    responses={200: SkillSerializer},
-    auth=[]
+    tags=['Job'],
+    summary='Detail of a job',
+    responses={200: JobSerializer}
 )
-class SkillDetailView(RetrieveAPIView):
+class JobDetailView(RetrieveAPIView):
     permission_classes = [AllowAny]
-    queryset = Skill.objects.all()
-    serializer_class = SkillSerializer
-    lookup_field = 'name'
+    queryset = Job.objects.all()
+    serializer_class = JobSerializer
+    lookup_field = 'title'
 
 
-class AddSkillView(APIView):
-    permission_classes = [IsAdminUser]
-    serializer_class = SkillSerializer
+class CreateJobView(APIView):
+    permission_classes = [IsJobOwner]
+    serializer_class = JobSerializer
 
     @extend_schema(
-        tags=['Skill'],
-        summary='Add new Skill',
-        responses={201: SkillSerializer}
+        tags=['Job'],
+        summary='Add a new job',
+        responses={201: JobSerializer}
     )
     def post(self, request):
-        serializer = SkillSerializer(data=request.data)
-
+        serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response({'message': 'Skill Added', 'result': serializer.data}, status=status.HTTP_201_CREATED)
+        return Response({'message': 'Job Added', 'result': serializer.data}, status=status.HTTP_201_CREATED)
 
 
-@extend_schema(
-    tags=['Skill'],
-    summary='Remove Skill'
-)
-class RemoveSkillView(DestroyAPIView):
-    permission_classes = [IsAdminUser]
-    queryset = Skill.objects.all()
-    serializer_class = SkillSerializer
-    lookup_field = 'name'
+class UpdateJobView(APIView):
+    permission_classes = [IsJobOwner]
+    serializer_class = JobSerializer
+
+    @extend_schema(
+        tags=['Job'],
+        summary='Update existing job',
+        responses={200: JobSerializer}
+    )
+    def put(self, request, job_title):
+        owner = get_object_or_404(JobOwner.objects.select_related('user'), user=request.user)
+        job = get_object_or_404(Job, company__owner=owner, title=job_title)
+
+        serializer = self.serializer_class(instance=job, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({'message': 'Job Updated', 'result': serializer.data}, status=status.HTTP_200_OK)
+
+
+class RemoveJobView(APIView):
+    permission_classes = [IsJobOwner]
+    serializer_class = JobSerializer
+
+    @extend_schema(
+        tags=['Job'],
+        summary='Remove job',
+    )
+    def delete(self, request, job_title):
+        owner = get_object_or_404(JobOwner.objects.select_related('user'), user=request.user)
+        job = get_object_or_404(Job, company__owner=owner, title=job_title)
+        job.delete()
+
+        return Response({'message': 'Job Removed'}, status=status.HTTP_200_OK)
