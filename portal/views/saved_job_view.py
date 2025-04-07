@@ -1,5 +1,4 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView, CreateAPIView
 from portal.models.saved_jobs_model import SavedJob
 from portal.models.job_seeker_profile_model import JobSeekerProfile
 from rest_framework import status
@@ -7,8 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema
 from portal.serializers.saved_job_serializer import SavedJobSerializer
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
-from portal.utility.permissions import IsJobOwner
+from rest_framework.permissions import IsAuthenticated
 from portal.utility.pagination import Pagination
 
 
